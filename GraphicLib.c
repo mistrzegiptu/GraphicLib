@@ -191,22 +191,22 @@ int gl_read_bmp(int **display, char *filePath)
     bitCount = infoHeader[14] | infoHeader[15] << 8;
     display = gl_innit(width, height);
 
-    printf("File size = %lld \n", fileSize);
+    printf("File size = %I64llu \n", fileSize);
     printf("width = %d height = %d\n", width, height);
     printf("Colors used = %d\n", colorsUsed);
     printf("Bit Count = %d\n", bitCount);
 
-    //color_channel *colorTable = malloc(sizeof(color_channel)*width*height*4);
-    unsigned char colorTable[32*32] = {0};
+    color_channel *colorTable = malloc(sizeof(color_channel)*width*height*4);
+    //unsigned char colorTable[32*32] = {0};
     //fseek(f, 54, SEEK_SET);
-    printf("bytes readed: %lld\n", fread(colorTable, sizeof(colorTable), 1, f));
+    printf("bytes readed: %I64llu\n", fread(colorTable, sizeof(colorTable), 1024*2+2, f));
 
     /*for(int i = 0; i < height*width*4; i+=4) {
         printf("%x ", colorTable[i]);
         color_val color = colorTable[i] | (colorTable[i + 1] << 8) | (colorTable[i + 2] << 16) | (colorTable[i + 3] << 24);
         //printf("%d ", color);
     }*/
-    for(int i = 0; i < 32*32; i++)
+    for(int i = 0; i < 32*32*2+2; i++)
         printf("%x ", colorTable[i]);
 
     /*char c;
@@ -217,7 +217,7 @@ int gl_read_bmp(int **display, char *filePath)
     }*/
 
     fclose(f);
-    //free(colorTable);
+    free(colorTable);
     return 0;
 }
 int getVal(char c)
