@@ -1,6 +1,6 @@
 #include "GraphicLib.h"
 
-int** gl_innit(int width, int height)
+color_val** gl_innit(int width, int height)
 {
     color_val **display = malloc(sizeof(color_val *) * height);
     for(int i = 0; i < height; i++)
@@ -10,7 +10,7 @@ int** gl_innit(int width, int height)
     printf("Innit succes");
     return display;
 }
-int gl_fill_color(int **display, int width, int height, color_val color)
+int gl_fill_color(color_val **display, int width, int height, color_val color)
 {
     printf("Dupa1");
     for(int i = 0; i < height; i++)
@@ -22,17 +22,17 @@ int gl_fill_color(int **display, int width, int height, color_val color)
     }
     return 0;
 }
-int gl_save_ppm(int **display, int width, int height, char *filePath)
+int gl_save_ppm(color_val **display, int width, int height, char *filePath)
 {
     FILE *f;
     f = fopen(filePath, "wb");
-
+    printf("DUPA\n");
     if(f==NULL)
     {
-        printf("File error");
+        printf("File error\n");
         return -1;
     }
-    printf("Writing to file");
+    printf("Writing to file\n");
     fprintf(f, "P3\n%d %d\n255\n", width, height);
 
     for(int i = 0; i < height; i++)
@@ -50,7 +50,7 @@ int gl_save_ppm(int **display, int width, int height, char *filePath)
     fclose(f);
     return 0;
 }
-int gl_fill_rect(int **display, int width, int height, int x1, int y1, int x2, int y2, color_val color)
+int gl_fill_rect(color_val **display, int width, int height, int x1, int y1, int x2, int y2, color_val color)
 {
     for(int i = y1; i <= y2 && i < height; i++)
     {
@@ -61,7 +61,7 @@ int gl_fill_rect(int **display, int width, int height, int x1, int y1, int x2, i
     }
     return 0;
 }
-int gl_draw_line(int **display, int width, int height, int x1, int y1, int x2, int y2, color_val color)
+int gl_draw_line(color_val **display, int width, int height, int x1, int y1, int x2, int y2, color_val color)
 {
     int d, dx, dy, ai, bi, xi, yi;
     int x = x1, y = y1;
@@ -133,7 +133,7 @@ int gl_draw_line(int **display, int width, int height, int x1, int y1, int x2, i
     }
     return 0;
 }
-int gl_draw_triangle(int **display, int width, int height, int x1, int y1, int x2, int y2, int x3, int y3, color_val color)
+int gl_draw_triangle(color_val **display, int width, int height, int x1, int y1, int x2, int y2, int x3, int y3, color_val color)
 {
     gl_draw_line(display, width, height, x1, y1, x2, y2, color);
     gl_draw_line(display, width, height, x1, y1, x3, y3, color);
@@ -144,7 +144,7 @@ int gl_draw_triangle(int **display, int width, int height, int x1, int y1, int x
     gl_flooding(display, width, height, y, x, color);
     return 0;
 }
-int gl_flooding(int **display, int width, int height, int y, int x, color_val color)
+int gl_flooding(color_val **display, int width, int height, int y, int x, color_val color)
 {
     if(x>=0&&x<width && y>=0&&y<height)
         display[y][x] = color;
@@ -158,7 +158,7 @@ int gl_flooding(int **display, int width, int height, int y, int x, color_val co
         gl_flooding(display, width, height, y, x-1, color);
     return 0;
 }
-int gl_read_bmp(int **display, char *filePath)
+int gl_read_bmp(color_val **display, char *filePath)
 {
     FILE *f;
     f = fopen(filePath, "rb");
@@ -188,50 +188,77 @@ int gl_read_bmp(int **display, char *filePath)
         height |= infoHeader[8+i] << 8 * i;
         colorsUsed |= infoHeader[32+i] << 8 * i;
     }
+    colorsUsed = 256;
     bitCount = infoHeader[14] | infoHeader[15] << 8;
-    display = gl_innit(width, height);
-
+    //display = gl_innit(width, height);
+    color_val _display[32][32] = {0};
     printf("File size = %I64llu \n", fileSize);
     printf("width = %d height = %d\n", width, height);
     printf("Colors used = %d\n", colorsUsed);
     printf("Bit Count = %d\n", bitCount);
 
-    color_channel *colorTable = malloc(sizeof(color_channel)*width*height*4);
-    //unsigned char colorTable[32*32] = {0};
+    color_channel colorTable[1024] = {0};
+    //color_val colorTable[32*32] = {0};
     //fseek(f, 54, SEEK_SET);
-    printf("bytes readed: %I64llu\n", fread(colorTable, sizeof(colorTable), 1024*2+2, f));
+    printf("bytes readed: %lld\n", fread(colorTable, sizeof(color_channel), colorsUsed*4, f));
 
-    /*for(int i = 0; i < height*width*4; i+=4) {
+    for(int i = 0; i < 1024; i++)
         printf("%x ", colorTable[i]);
-        color_val color = colorTable[i] | (colorTable[i + 1] << 8) | (colorTable[i + 2] << 16) | (colorTable[i + 3] << 24);
-        //printf("%d ", color);
-    }*/
-    for(int i = 0; i < 32*32*2+2; i++)
-        printf("%x ", colorTable[i]);
+    color_val colorArray[256] = {0};
+    for(int i = 0; i < 256; i++)
+        colorArray[i] = colorTable[4*i] | colorTable[4*i+1] << 8 | colorTable[4*i+2] << 16 | colorTable[4*i+3] << 24;
 
-    /*char c;
-    while((c = fgetc(f)) != EOF)
+    for(int i = 0; i < 256; i++)
+        printf("%x \n", colorArray[i]);
+
+    for(int i = 0; i < height; i++)
     {
-        int val = getVal(c) << 4 | getVal(fgetc(f));
-        printf("%x ", val);
-    }*/
+        color_channel row[32] = {0};
+        printf("bytes of row %d readed: %lld\n",i, fread(row, sizeof(row), 1, f));
 
+        for(int j = 0; j < 32; j++)
+        {
+            printf("%d ", row[j]);
+            _display[i][j] = colorArray[(int)row[j]];
+        }
+        printf("\n");
+    }
+
+    FILE *ff;
+    ff = fopen("kurwa.ppm", "wb");
+    printf("DUPA\n");
+    if(ff==NULL)
+    {
+        printf("File error\n");
+        return -1;
+    }
+    printf("Writing to file\n");
+    fprintf(ff, "P3\n%d %d\n255\n", width, height);
+
+    for(int i = height-1; i >= 0; i--)
+    {
+        for(int j = 0; j < width; j++)
+        {
+            color_val color = _display[i][j];
+            color_channel R = (color>>8*2)&0xFF;
+            color_channel G = (color>>8*1)&0xFF;
+            color_channel B = (color>>8*0)&0xFF;
+            fprintf(ff, "%d %d %d\n", R, G, B);
+        }
+    }
+
+    fclose(ff);
+    //gl_save_ppm(rowPointers, 32, 32, "hggjkh.ppm");
     fclose(f);
-    free(colorTable);
+    //free(colorTable);
     return 0;
 }
-int getVal(char c)
+int gl_free_display(color_val **display, int width, int height)
 {
-    int num = (int) c;
-    if(num < 58 && num > 47)
-    {
-        return num - 48;
-    }
-    if(num < 103 && num > 96)
-    {
-        return num - 87;
-    }
-    return num;
+    for(int i = 0; i < height; i++)
+        free(display[i]);
+    free(display);
+    return 0;
 }
 /*int gl_save_png(int **display, int height, int width, char *filePath)
 {

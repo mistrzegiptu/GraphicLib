@@ -5,9 +5,9 @@
 
 int main(void)
 {
-    int **display;
+    color_val **display = {0};
     int width = 1920, height = 1080;
-    display = gl_innit(width, height);
+    /*display = gl_innit(width, height);
     printf("Dupa");
     gl_fill_color(display, width, height, COLOR_BLACK);
     gl_fill_rect(display, width, height, 2, 2, 6, 6, 0xF0F0F0);
@@ -35,9 +35,10 @@ int main(void)
 
     }
 
-    gl_save_ppm(display, width, height, "output.ppm");
+    gl_save_ppm(display, width, height, "output.ppm");*/
     gl_read_bmp(display, "openttd.bmp");
 
     printf("\n%d %d", width, height);
+    gl_free_display(display, width, height);
     return 0;
 }

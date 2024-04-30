@@ -1,2 +1,2 @@
-gcc -Wall -c GraphicLib.c
-gcc -Wall -o test test.c GraphicLib.o
+gcc -Wall -Wextra -c GraphicLib.c
+gcc -Wall -Wextra -o test test.c GraphicLib.o
