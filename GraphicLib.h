@@ -3,7 +3,7 @@
 
 #include <malloc.h>
 #include <stdio.h>
-#include <zlib.h>
+//#include <zlib.h>
 //#include <png.h>
 //BASIC COLORS
 #define COLOR_BLACK 0x000000

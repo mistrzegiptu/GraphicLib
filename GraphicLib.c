@@ -192,7 +192,7 @@ int gl_read_bmp(color_val **display, char *filePath)
     bitCount = infoHeader[14] | infoHeader[15] << 8;
     //display = gl_innit(width, height);
     color_val _display[32][32] = {0};
-    printf("File size = %I64llu \n", fileSize);
+    printf("File size = %Iu \n", fileSize);
     printf("width = %d height = %d\n", width, height);
     printf("Colors used = %d\n", colorsUsed);
     printf("Bit Count = %d\n", bitCount);
@@ -200,7 +200,7 @@ int gl_read_bmp(color_val **display, char *filePath)
     color_channel colorTable[1024] = {0};
     //color_val colorTable[32*32] = {0};
     //fseek(f, 54, SEEK_SET);
-    printf("bytes readed: %lld\n", fread(colorTable, sizeof(color_channel), colorsUsed*4, f));
+    printf("bytes readed: %Iu\n", fread(colorTable, sizeof(color_channel), colorsUsed*4, f));
 
     for(int i = 0; i < 1024; i++)
         printf("%x ", colorTable[i]);
@@ -214,7 +214,7 @@ int gl_read_bmp(color_val **display, char *filePath)
     for(int i = 0; i < height; i++)
     {
         color_channel row[32] = {0};
-        printf("bytes of row %d readed: %lld\n",i, fread(row, sizeof(row), 1, f));
+        printf("bytes of row %d readed: %Iu\n",i, fread(row, sizeof(row), 1, f));
 
         for(int j = 0; j < 32; j++)
         {
