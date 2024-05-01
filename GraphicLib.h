@@ -1,10 +1,6 @@
 #ifndef GRAPHIC_LIB
 #define GRAPHIC_LIB
 
-#include <malloc.h>
-#include <stdio.h>
-//#include <zlib.h>
-//#include <png.h>
 //BASIC COLORS
 #define COLOR_BLACK 0x000000
 #define COLOR_WHITE 0xFFFFFF

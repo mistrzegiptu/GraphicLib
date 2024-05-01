@@ -1,8 +1,7 @@
 #ifndef BMP_LIB
 #define BMP_LIB
 
-typedef unsigned int color_value;
-
+typedef int color_value;
 
 typedef enum _bmp_compression
 {
@@ -11,24 +10,34 @@ typedef enum _bmp_compression
     RLE_4_BITS = 2
 }bmp_compression;
 
-typedef struct _bmp_header
-{
-    unsigned int fileSize = 0;
-    unsigned int headerSize = 0;
-    unsigned int width = 0;
-    unsigned int height = 0;
-
-    unsigned short planes = 1;
-    unsigned short bitCount = 0;
-
-    bmp_compression compression = NO_COMPRESSION;
-    unsigned int imageSize = 0;
-}bmp_header;
-
 typedef struct _bmp_file
 {
-    bmp_header header = {0};
-    color_value **pixels = {0};
+    unsigned int fileSize;
+    unsigned int dataOffset;
+    unsigned int headerSize;
+
+    int width;
+    int height;
+
+    unsigned short planes;
+    unsigned short bitCount;
+
+    bmp_compression compression;
+
+    unsigned int imageSize;
+
+    int xPixelPerM;
+    int yPixelsPerM;
+    int colorUsed;
+    int colorsImportant;
+
+    color_value **rasterData;
 }bmp_file;
+
+void bmp_init(bmp_file *img, int width, int height);
+int bmp_read_file(bmp_file *img,  char *path);
+void bmp_print(bmp_file *img);
+void bmp_alloc(bmp_file *img);
+void bmp_free(bmp_file *img);
 
 #endif

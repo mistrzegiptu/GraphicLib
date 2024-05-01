@@ -1,4 +1,6 @@
 #include "GraphicLib.h"
+#include <malloc.h>
+#include <stdio.h>
 
 color_val** gl_innit(int width, int height)
 {
