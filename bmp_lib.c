@@ -112,12 +112,12 @@ int bmp_read_file(bmp_file *img, char *path)
                 else
                     printf("O kurwa\n");
             }
-            fseek(f, img->width % 4, SEEK_CUR);
+            fseek(f, img->width % 4, SEEK_CUR); //Row padding
             free(row);
         }
     }
     FILE *ff;
-    ff = fopen("kurwa.ppm", "wb");
+    ff = fopen("outputBmp.ppm", "wb");
     printf("DUPA\n");
     if(ff==NULL)
     {
