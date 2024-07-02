@@ -131,6 +131,8 @@ int bmp_read_file(bmp_file *img, char *path)
     {
         for(int j = 0; j < img->width; j++)
         {
+            if(img->rasterData == NULL)
+                return -1;
             color_value color = img->rasterData[i][j];
             unsigned char R = (color>>8*2)&0xFF;
             unsigned char G = (color>>8*1)&0xFF;
@@ -140,6 +142,22 @@ int bmp_read_file(bmp_file *img, char *path)
     }
 
     fclose(ff);
+    fclose(f);
+    return 0;
+}
+int bmp_save_file(bmp_file *img, char *path)
+{
+    FILE *f;
+    f = fopen(path, "wb");
+
+    if(f == NULL)
+    {
+        printf("Error opening file, incorrect path... \n");
+        return -1;
+    }
+
+    fprintf(f, "BM");
+
     fclose(f);
     return 0;
 }

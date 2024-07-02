@@ -36,6 +36,7 @@ typedef struct _bmp_file
 
 void bmp_init(bmp_file *img, int width, int height);
 int bmp_read_file(bmp_file *img,  char *path);
+int bmp_save_file(bmp_file *img, char *path);
 void bmp_print(bmp_file *img);
 void bmp_alloc(bmp_file *img);
 void bmp_free(bmp_file *img);

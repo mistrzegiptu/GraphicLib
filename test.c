@@ -44,6 +44,7 @@ int main(void)
     bmp_file image = {0};
     //bmp_read_file(&image, "lena_gray.bmp");
     bmp_read_file(&image, "testBmp/ray.bmp");
+    bmp_save_file(&image, "res.bmp");
     bmp_free(&image);
     return 0;
 }
