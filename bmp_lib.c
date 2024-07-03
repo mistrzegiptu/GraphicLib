@@ -5,6 +5,7 @@
 
 void bmp_init(bmp_file *img, int width, int height)
 {
+    img->reserved = 0;
     img->dataOffset = 0;
     img->headerSize = 40;
     img->width = width;
@@ -101,6 +102,7 @@ int bmp_read_file(bmp_file *img, char *path)
     }
     else
     {
+        printf("DUPA DUPA DUPA\n");
         for(int i = img->height-1; i >= 0; i--)
         {
             unsigned char *row = malloc(sizeof(unsigned char) * img->width * (img->bitCount/8));
@@ -156,7 +158,45 @@ int bmp_save_file(bmp_file *img, char *path)
         return -1;
     }
 
-    fprintf(f, "BM");
+    unsigned short magic_num = BMP_MAGIC_NUM;
+    fwrite(&magic_num, sizeof(unsigned short), 1, f);
+
+    if(img->fileSize == 0)
+        img->fileSize = calc_file_size(img);
+    img->dataOffset = 54;
+
+    fwrite(&img->fileSize, sizeof(unsigned int), 1, f);
+    fwrite(&img->reserved, sizeof(unsigned int), 1, f);
+    fwrite(&img->dataOffset, sizeof(unsigned int), 1, f);
+    fwrite(&img->headerSize, sizeof(unsigned int), 1, f);
+    fwrite(&img->width, sizeof(int), 1, f);
+    fwrite(&img->height, sizeof(int), 1, f);
+    fwrite(&img->planes, sizeof(unsigned short), 1, f);
+    fwrite(&img->bitCount, sizeof(unsigned short), 1, f);
+    fwrite(&img->compression, sizeof(int), 1, f);
+    fwrite(&img->imageSize, sizeof(unsigned int), 1, f);
+    fwrite(&img->xPixelPerM, sizeof(int), 1, f);
+    fwrite(&img->yPixelsPerM, sizeof(int), 1, f);
+    fwrite(&img->colorUsed, sizeof(int), 1, f);
+    fwrite(&img->colorsImportant, sizeof(int), 1, f);
+
+    if(img->rasterData != NULL)
+    {
+        for (int i = img->height-1; i >= 0; i--)
+        {
+            for(int j = 0; j < img->width; j++)
+            {
+                unsigned char R, G, B;
+                R = (img->rasterData[i][j] >> 0) & 0xFF;
+                G = (img->rasterData[i][j] >> 8) & 0xFF;
+                B = (img->rasterData[i][j] >> 16) & 0xFF;
+                fwrite(&R, sizeof(unsigned char), 1, f);
+                fwrite(&G, sizeof(unsigned char), 1, f);
+                fwrite(&B, sizeof(unsigned char), 1, f);
+            }
+        }
+            //printf("Data written: %llu", fwrite(img->rasterData[i], sizeof(unsigned char), img->width*3, f));
+    }
 
     fclose(f);
     return 0;
@@ -202,4 +242,8 @@ void bmp_free(bmp_file *img)
 
     free(img->rasterData);
     free(img);
+}
+unsigned int calc_file_size(bmp_file *img)
+{
+    return 0;
 }
