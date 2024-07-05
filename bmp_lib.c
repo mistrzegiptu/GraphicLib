@@ -1,9 +1,9 @@
 #include "bmp_lib.h"
 #include <stdio.h>
 #include <malloc.h>
+#include <math.h>
 
-
-void bmp_init(bmp_file *img, int width, int height)
+void bmp_init(bmp_file *img, int width, int height, unsigned short bitCount)
 {
     img->reserved = 0;
     img->dataOffset = 0;
@@ -11,7 +11,7 @@ void bmp_init(bmp_file *img, int width, int height)
     img->width = width;
     img->height = height;
     img->planes = 1;
-    img->bitCount = 8;
+    img->bitCount = bitCount;
     img->compression = NO_COMPRESSION;
     img->imageSize = 0;
     img->colorsImportant = 0;
@@ -76,29 +76,29 @@ int bmp_read_file(bmp_file *img, char *path)
         bmp_alloc(img);
     }
 
-    if(img->compression == NO_COMPRESSION && img->bitCount == 0 && img->dataOffset != 54)
+    if(img->compression == NO_COMPRESSION && img->bitCount == 8 && img->dataOffset != 54)
     {
         unsigned char colorTable[1024];
         color_value colorArray[256];
 
         printf("color table bytes %lld\n", fread(colorTable, sizeof(unsigned char), 1024, f));
 
-        for(int i = 0; i < 256; i++)
-            colorArray[i] = colorTable[4*i] | colorTable[4*i+1] << 8 | colorTable[4*i+2] << 16 | colorTable[4*i+3] << 24;
+        for(int i = 0; i < 256; i++) {
+            colorArray[i] = colorTable[4 * i] | colorTable[4 * i + 1] << 8 | colorTable[4 * i + 2] << 16 | colorTable[4 * i + 3] << 24;
+            printf("%x \n", colorArray[i]);
+        }
 
+        unsigned char *row = malloc(sizeof(unsigned char) * img->width);
         for(int i = img->height-1; i >= 0; i--)
         {
-            unsigned char *row = malloc(sizeof(unsigned char) * img->width);
             printf("row bytes %lld\n", fread(row, sizeof(unsigned char), img->width, f));
             for(int j = 0; j < img->width; j++)
             {
                 if(img->rasterData != NULL)
                     img->rasterData[i][j] = colorArray[(int)row[j]];
-                else
-                    printf("O kurwa\n");
             }
-            free(row);
         }
+        free(row);
     }
     else
     {
@@ -163,7 +163,6 @@ int bmp_save_file(bmp_file *img, char *path)
 
     if(img->fileSize == 0)
         img->fileSize = calc_file_size(img);
-    img->dataOffset = 54;
 
     fwrite(&img->fileSize, sizeof(unsigned int), 1, f);
     fwrite(&img->reserved, sizeof(unsigned int), 1, f);
@@ -180,26 +179,72 @@ int bmp_save_file(bmp_file *img, char *path)
     fwrite(&img->colorUsed, sizeof(int), 1, f);
     fwrite(&img->colorsImportant, sizeof(int), 1, f);
 
-    if(img->rasterData != NULL)
-    {
-        for (int i = img->height-1; i >= 0; i--)
-        {
-            for(int j = 0; j < img->width; j++)
-            {
-                unsigned char R, G, B;
-                R = (img->rasterData[i][j] >> 0) & 0xFF;
-                G = (img->rasterData[i][j] >> 8) & 0xFF;
-                B = (img->rasterData[i][j] >> 16) & 0xFF;
-                fwrite(&R, sizeof(unsigned char), 1, f);
-                fwrite(&G, sizeof(unsigned char), 1, f);
-                fwrite(&B, sizeof(unsigned char), 1, f);
-            }
+    if(img->rasterData == NULL)
+        return -1;
+
+    if(img->bitCount <= 8) {
+        color_value *colorTable;
+
+        unsigned char **encodedRasterData = malloc(sizeof(unsigned char *) * img->height);
+        for (int i = 0; i < img->height; i++)
+            encodedRasterData[i] = malloc(sizeof(unsigned char) * img->width);
+
+        colorTable = bmp_create_color_table(img, encodedRasterData);
+
+        fwrite(colorTable, sizeof(color_value), (int)(pow(2, img->bitCount)), f);
+
+        for (int i = img->height - 1; i >= 0; i--) {
+            fwrite(encodedRasterData[i], sizeof(unsigned char), img->width, f);
+            free(encodedRasterData[i]);
         }
-            //printf("Data written: %llu", fwrite(img->rasterData[i], sizeof(unsigned char), img->width*3, f));
+        free(encodedRasterData);
+    }
+    else {
+        int paddingSize = img->width % 4;
+        unsigned char padding[paddingSize];
+        for (int i = img->height - 1; i >= 0; i--) {
+            for (int j = 0; j < img->width; j++) {
+                unsigned char colorData[3];
+                colorData[0] = (img->rasterData[i][j] >> 0) & 0xFF;
+                colorData[1] = (img->rasterData[i][j] >> 8) & 0xFF;
+                colorData[2] = (img->rasterData[i][j] >> 16) & 0xFF;
+                fwrite(colorData, sizeof(unsigned char), 3, f);
+            }
+            fwrite(padding, sizeof(unsigned char), paddingSize, f);
+        }
     }
 
     fclose(f);
     return 0;
+}
+color_value *bmp_create_color_table(bmp_file *img, unsigned char **encodedRasterData)
+{
+    size_t size = (size_t)pow(2, img->bitCount);
+    color_value *colorTable = malloc(sizeof(color_value) * size);
+
+    int colorCount = 0;
+
+    for (int i = img->height-1; i >= 0; i--)
+    {
+        for(int j = 0; j < img->width; j++)
+        {
+            int k = 0, found = 0;
+            for(k; k < colorCount; k++) {
+                if (colorTable[k] == img->rasterData[i][j]) {
+                    found = 1;
+                    break;
+                }
+            }
+            if(!found)
+            {
+                colorTable[colorCount] = img->rasterData[i][j];
+                colorCount += 1;
+            }
+            (encodedRasterData[i][j]) = k;
+        }
+    }
+
+    return colorTable;
 }
 void bmp_print(bmp_file *img)
 {

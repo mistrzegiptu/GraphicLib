@@ -37,9 +37,10 @@ typedef struct _bmp_file
     color_value **rasterData;
 }bmp_file;
 
-void bmp_init(bmp_file *img, int width, int height);
+void bmp_init(bmp_file *img, int width, int height, unsigned short bitCount);
 int bmp_read_file(bmp_file *img,  char *path);
 int bmp_save_file(bmp_file *img, char *path);
+color_value *bmp_create_color_table(bmp_file *img, unsigned char **encodedRasterData);
 void bmp_print(bmp_file *img);
 void bmp_alloc(bmp_file *img);
 void bmp_free(bmp_file *img);
