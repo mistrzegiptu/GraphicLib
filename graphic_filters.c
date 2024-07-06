@@ -44,3 +44,38 @@ void monochromatic(color_value **raster_data, int height, int width)
         }
     }
 }
+void contrast_change(color_value **raster_data, int height, int width, float k)
+{
+    for(int i = 0; i < height; i++)
+    {
+        for(int j = 0; j < width; j++)
+        {
+            int R = (raster_data[i][j] >> 16) & 0xFF;
+            int G = (raster_data[i][j] >> 8) & 0xFF;
+            int B = (raster_data[i][j] >> 0) & 0xFF;
+            R = (int)((R - 128) * k + 128);
+            G = (int)((G - 128) * k + 128);
+            B = (int)((B - 128) * k + 128);
+            R = R > 255 ? 255 : (R < 0 ? 0 : R);
+            G = G > 255 ? 255 : (G < 0 ? 0 : G);
+            B = B > 255 ? 255 : (B < 0 ? 0 : B);
+            raster_data[i][j] = (R << 16) | (G << 8) | (B << 0);
+        }
+    }
+}
+void brightness_change(color_value **raster_data, int height, int width, int delta)
+{
+    for(int i = 0; i < height; i++)
+    {
+        for(int j = 0; j < width; j++)
+        {
+            int R = ((raster_data[i][j] >> 16) & 0xFF) + delta;
+            int G = ((raster_data[i][j] >> 8) & 0xFF) + delta;
+            int B = ((raster_data[i][j] >> 0) & 0xFF) + delta;
+            R = R > 255 ? 255 : (R < 0 ? 0 : R);
+            G = G > 255 ? 255 : (G < 0 ? 0 : G);
+            B = B > 255 ? 255 : (B < 0 ? 0 : B);
+            raster_data[i][j] = (R << 16) | (G << 8) | (B << 0);
+        }
+    }
+}
