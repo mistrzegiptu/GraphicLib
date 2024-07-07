@@ -46,6 +46,7 @@ int bmp_read_file(bmp_file *img, char *path)
 
     if(img->headerSize != 40) //Currently reading only 40bytes InfoHeader
     {
+        printf("Header size %d \n", img->headerSize);
         printf("Wrong BMP header type...\n");
         return -1;
     }

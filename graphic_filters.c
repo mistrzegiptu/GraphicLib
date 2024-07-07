@@ -1,4 +1,5 @@
 #include "graphic_filters.h"
+#include <math.h>
 
 void negative(color_value **raster_data, int height, int width)
 {
@@ -76,6 +77,38 @@ void brightness_change(color_value **raster_data, int height, int width, int del
             G = G > 255 ? 255 : (G < 0 ? 0 : G);
             B = B > 255 ? 255 : (B < 0 ? 0 : B);
             raster_data[i][j] = (R << 16) | (G << 8) | (B << 0);
+        }
+    }
+}
+void sobel_operator(color_value **raster_data, int height, int width)
+{
+    int Gx[3][3] = {
+            {1, 0, -1},
+            {2, 0, -2},
+            {1, 0, -1}
+    };
+    int Gy[3][3] = {
+            {1, 2, 1},
+            {0, 0, 0},
+            {-1, -2, -1}
+    };
+    for(int i = 1; i < height-1; i++)
+    {
+        for(int j = 1; j < width-1; j++)
+        {
+            int sumX = 0, sumY = 0;
+
+            for(int dy = -1; dy < 2; dy++)
+            {
+                for(int dx = -1; dx < 2; dx++)
+                {
+                    sumX += raster_data[i+dy][j+dx] * Gx[dy+1][dx+1];
+                    sumY += raster_data[i+dy][j+dx] * Gy[dy+1][dx+1];
+                }
+            }
+            int G = (int)(sqrt(sumX*sumX + sumY*sumY));
+            G = G > 255 ? 255 : G;
+            raster_data[i][j] = (G << 16) | (G << 8) | G;
         }
     }
 }

@@ -45,8 +45,9 @@ int main(void)
     bmp_file image = {0};
     //bmp_read_file(&image, "lena_gray.bmp");
     bmp_read_file(&image, "testBmp/ray.bmp");
-    //sepia(image.rasterData, image.height, image.width);
-    contrast_change(image.rasterData, image.height, image.width, -5);
+    //monochromatic(image.rasterData, image.height, image.width);
+    //contrast_change(image.rasterData, image.height, image.width, -5);
+    sobel_operator(image.rasterData, image.height, image.width);
     //brightness_change(image.rasterData, image.height, image.width, 60);
     bmp_save_file(&image, "res.bmp");
     bmp_free(&image);
