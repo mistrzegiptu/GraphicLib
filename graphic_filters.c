@@ -112,3 +112,18 @@ void sobel_operator(color_value **raster_data, int height, int width)
         }
     }
 }
+void real_mono(color_value **raster_data, int height, int width)
+{
+    for(int i = 0; i < height; i++)
+    {
+        for(int j = 0; j < width; j++)
+        {
+            int R = (raster_data[i][j] >> 16) & 0xFF;
+            int G = (raster_data[i][j] >> 8) & 0xFF;
+            int B = (raster_data[i][j] >> 0) & 0xFF;
+            float white = sqrt(pow(R, 2) + pow(G, 2) + pow(B, 2));
+            float black = sqrt(pow(255-R, 2) + pow(255-G, 2) + pow(255-B, 2));
+            raster_data[i][j] = white >= black ? 0x000000 : 0xFFFFFF;
+        }
+    }
+}

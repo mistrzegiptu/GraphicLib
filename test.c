@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include "bmp_lib.h"
 #include "graphic_filters.h"
-//#include "GraphicLib.h"
+#include "GraphicLib.h"
 
 int main(void)
 {
-    /*color_val **display = {0};
+    /*color_value **display = {0};
     int width = 1920, height = 1080;
     display = gl_innit(width, height);
     printf("Dupa");
@@ -38,18 +38,21 @@ int main(void)
     }
 
     gl_save_ppm(display, width, height, "output.ppm");
-    gl_read_bmp(display, "openttd.bmp");
+    //gl_read_bmp(display, "openttd.bmp");
 
-    printf("\n%d %d", width, height);
-    gl_free_display(display, width, height);*/
+    printf("\n%d %d", width, height);*/
+    //gl_free_display(display, width, height);
     bmp_file image = {0};
-    //bmp_read_file(&image, "lena_gray.bmp");
-    bmp_read_file(&image, "testBmp/ray.bmp");
+    /*bmp_init(&image, width, height, 24);
+    image.rasterData = display;*/
+    bmp_read_file(&image, "testBmp/marbles.bmp");
+    gl_print_ascii(image.rasterData, image.width, image.height);
     //monochromatic(image.rasterData, image.height, image.width);
-    //contrast_change(image.rasterData, image.height, image.width, -5);
-    sobel_operator(image.rasterData, image.height, image.width);
+    //contrast_change(image.rasterData, image.height, image.width, 2.5);
+    //sobel_operator(image.rasterData, image.height, image.width);
+    //real_mono(image.rasterData, image.height, image.width);
     //brightness_change(image.rasterData, image.height, image.width, 60);
-    bmp_save_file(&image, "res.bmp");
+    bmp_save_file(&image, "marbles.bmp");
     bmp_free(&image);
     return 0;
 }

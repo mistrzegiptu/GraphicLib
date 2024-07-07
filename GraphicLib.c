@@ -2,17 +2,17 @@
 #include <malloc.h>
 #include <stdio.h>
 
-color_val** gl_innit(int width, int height)
+color_value** gl_innit(int width, int height)
 {
-    color_val **display = malloc(sizeof(color_val *) * height);
+    color_value **display = malloc(sizeof(color_value *) * height);
     for(int i = 0; i < height; i++)
     {
-        display[i] = malloc(sizeof(color_val *) * width);
+        display[i] = malloc(sizeof(color_value *) * width);
     }
     printf("Innit succes");
     return display;
 }
-int gl_fill_color(color_val **display, int width, int height, color_val color)
+int gl_fill_color(color_value **display, int width, int height, color_value color)
 {
     printf("Dupa1");
     for(int i = 0; i < height; i++)
@@ -24,7 +24,7 @@ int gl_fill_color(color_val **display, int width, int height, color_val color)
     }
     return 0;
 }
-int gl_save_ppm(color_val **display, int width, int height, char *filePath)
+int gl_save_ppm(color_value **display, int width, int height, char *filePath)
 {
     FILE *f;
     f = fopen(filePath, "wb");
@@ -41,7 +41,7 @@ int gl_save_ppm(color_val **display, int width, int height, char *filePath)
     {
         for(int j = 0; j < width; j++)
         {
-            color_val color = display[i][j];
+            color_value color = display[i][j];
             color_channel R = (color>>8*2)&0xFF;
             color_channel G = (color>>8*1)&0xFF;
             color_channel B = (color>>8*0)&0xFF;
@@ -52,7 +52,7 @@ int gl_save_ppm(color_val **display, int width, int height, char *filePath)
     fclose(f);
     return 0;
 }
-int gl_fill_rect(color_val **display, int width, int height, int x1, int y1, int x2, int y2, color_val color)
+int gl_fill_rect(color_value **display, int width, int height, int x1, int y1, int x2, int y2, color_value color)
 {
     for(int i = y1; i <= y2 && i < height; i++)
     {
@@ -63,7 +63,7 @@ int gl_fill_rect(color_val **display, int width, int height, int x1, int y1, int
     }
     return 0;
 }
-int gl_draw_line(color_val **display, int width, int height, int x1, int y1, int x2, int y2, color_val color)
+int gl_draw_line(color_value **display, int width, int height, int x1, int y1, int x2, int y2, color_value color)
 {
     int d, dx, dy, ai, bi, xi, yi;
     int x = x1, y = y1;
@@ -135,7 +135,7 @@ int gl_draw_line(color_val **display, int width, int height, int x1, int y1, int
     }
     return 0;
 }
-int gl_draw_triangle(color_val **display, int width, int height, int x1, int y1, int x2, int y2, int x3, int y3, color_val color)
+int gl_draw_triangle(color_value **display, int width, int height, int x1, int y1, int x2, int y2, int x3, int y3, color_value color)
 {
     gl_draw_line(display, width, height, x1, y1, x2, y2, color);
     gl_draw_line(display, width, height, x1, y1, x3, y3, color);
@@ -146,7 +146,7 @@ int gl_draw_triangle(color_val **display, int width, int height, int x1, int y1,
     gl_flooding(display, width, height, y, x, color);
     return 0;
 }
-int gl_flooding(color_val **display, int width, int height, int y, int x, color_val color)
+int gl_flooding(color_value **display, int width, int height, int y, int x, color_value color)
 {
     if(x>=0&&x<width && y>=0&&y<height)
         display[y][x] = color;
@@ -160,7 +160,7 @@ int gl_flooding(color_val **display, int width, int height, int y, int x, color_
         gl_flooding(display, width, height, y, x-1, color);
     return 0;
 }
-int gl_read_bmp(color_val **display, char *filePath)
+int gl_read_bmp(color_value **display, char *filePath)
 {
     FILE *f;
     f = fopen(filePath, "rb");
@@ -193,20 +193,20 @@ int gl_read_bmp(color_val **display, char *filePath)
     colorsUsed = 256;
     bitCount = infoHeader[14] | infoHeader[15] << 8;
     //display = gl_innit(width, height);
-    color_val _display[32][32] = {0};
+    color_value _display[32][32] = {0};
     printf("File size = %Iu \n", fileSize);
     printf("width = %d height = %d\n", width, height);
     printf("Colors used = %d\n", colorsUsed);
     printf("Bit Count = %d\n", bitCount);
 
     color_channel colorTable[1024] = {0};
-    //color_val colorTable[32*32] = {0};
+    //color_value colorTable[32*32] = {0};
     //fseek(f, 54, SEEK_SET);
     printf("bytes readed: %Iu\n", fread(colorTable, sizeof(color_channel), colorsUsed*4, f));
 
     for(int i = 0; i < 1024; i++)
         printf("%x ", colorTable[i]);
-    color_val colorArray[256] = {0};
+    color_value colorArray[256] = {0};
     for(int i = 0; i < 256; i++)
         colorArray[i] = colorTable[4*i] | colorTable[4*i+1] << 8 | colorTable[4*i+2] << 16 | colorTable[4*i+3] << 24;
 
@@ -241,7 +241,7 @@ int gl_read_bmp(color_val **display, char *filePath)
     {
         for(int j = 0; j < width; j++)
         {
-            color_val color = _display[i][j];
+            color_value color = _display[i][j];
             color_channel R = (color>>8*2)&0xFF;
             color_channel G = (color>>8*1)&0xFF;
             color_channel B = (color>>8*0)&0xFF;
@@ -255,12 +255,36 @@ int gl_read_bmp(color_val **display, char *filePath)
     //free(colorTable);
     return 0;
 }
-int gl_free_display(color_val **display, int width, int height)
+int gl_free_display(color_value **display, int width, int height)
 {
     for(int i = 0; i < height; i++)
         free(display[i]);
     free(display);
     return 0;
+}
+void gl_print_ascii(color_value **display, int width, int height)
+{
+    char greyScale[] = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
+    char row[width] = {0};
+    for(int i = 0; i < height; i++)
+    {
+        for(int j = 0; j < width; j++)
+        {
+            color_value pixel = display[i][j];
+            int R = (pixel >> 16) & 0xFF;
+            int G = (pixel >> 8) & 0xFF;
+            int B = pixel & 0xFF;
+
+            int gray = (R + G + B) / 3;
+
+            // Normalize the grayscale value to the range of the ASCII characters
+            int index = (gray * (70)) / 255;
+
+            // Print the corresponding ASCII character
+            row[j] = greyScale[index];
+        }
+        puts(row);
+    }
 }
 /*int gl_save_png(int **display, int height, int width, char *filePath)
 {
