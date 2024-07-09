@@ -264,8 +264,10 @@ int gl_free_display(color_value **display, int width, int height)
 }
 void gl_print_ascii(color_value **display, int width, int height)
 {
-    char greyScale[] = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
-    char row[width] = {0};
+    char greyScale[] = " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
+    int greyScaleSize = sizeof(greyScale)-1; // NULL TERMINATOR
+    char *row = malloc(sizeof(char) * (width + 1));
+    row[width] = '\0';
     for(int i = 0; i < height; i++)
     {
         for(int j = 0; j < width; j++)
@@ -275,16 +277,16 @@ void gl_print_ascii(color_value **display, int width, int height)
             int G = (pixel >> 8) & 0xFF;
             int B = pixel & 0xFF;
 
-            int gray = (R + G + B) / 3;
+            float gray = R * 0.299 + G * 0.587 + B * 0.114;
+            int grayInt = (int)gray;
+            int index = (grayInt * (greyScaleSize-1)) / 255;
 
-            // Normalize the grayscale value to the range of the ASCII characters
-            int index = (gray * (70)) / 255;
-
-            // Print the corresponding ASCII character
             row[j] = greyScale[index];
         }
         puts(row);
+        //printf("%s\n", row);
     }
+    free(row);
 }
 /*int gl_save_png(int **display, int height, int width, char *filePath)
 {
