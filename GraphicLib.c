@@ -284,7 +284,6 @@ void gl_print_ascii(color_value **display, int width, int height)
             row[j] = greyScale[index];
         }
         puts(row);
-        //printf("%s\n", row);
     }
     free(row);
 }

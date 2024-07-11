@@ -82,17 +82,19 @@ int bmp_read_file(bmp_file *img, char *path)
         unsigned char colorTable[1024];
         color_value colorArray[256];
 
-        printf("color table bytes %lld\n", fread(colorTable, sizeof(unsigned char), 1024, f));
+        size_t bytesReaded = fread(colorTable, sizeof(unsigned char), 1024, f);
+        //printf("color table bytes %lld\n", bytesReaded);
 
         for(int i = 0; i < 256; i++) {
             colorArray[i] = colorTable[4 * i] | colorTable[4 * i + 1] << 8 | colorTable[4 * i + 2] << 16 | colorTable[4 * i + 3] << 24;
-            printf("%x \n", colorArray[i]);
+            //printf("%x \n", colorArray[i]);
         }
 
         unsigned char *row = malloc(sizeof(unsigned char) * img->width);
         for(int i = img->height-1; i >= 0; i--)
         {
-            printf("row bytes %lld\n", fread(row, sizeof(unsigned char), img->width, f));
+            size_t rowBytes = fread(row, sizeof(unsigned char), img->width, f);
+            //printf("row bytes %lld\n", rowBytes);
             for(int j = 0; j < img->width; j++)
             {
                 if(img->rasterData != NULL)
@@ -107,7 +109,8 @@ int bmp_read_file(bmp_file *img, char *path)
         for(int i = img->height-1; i >= 0; i--)
         {
             unsigned char *row = malloc(sizeof(unsigned char) * img->width * (img->bitCount/8));
-            printf("row bytes %lld\n", fread(row, sizeof(unsigned char), img->width*(img->bitCount/8), f));
+            size_t rowByte = fread(row, sizeof(unsigned char), img->width*(img->bitCount/8), f);
+            //printf("row bytes %lld\n", rowByte);
             for(int j = 0; j < img->width; j++)
             {
                 if(img->rasterData != NULL && img->rasterData[i] != NULL)
@@ -119,7 +122,7 @@ int bmp_read_file(bmp_file *img, char *path)
             free(row);
         }
     }
-    FILE *ff;
+    /*FILE *ff;
     ff = fopen("outputBmp.ppm", "wb");
     printf("DUPA\n");
     if(ff==NULL)
@@ -144,7 +147,7 @@ int bmp_read_file(bmp_file *img, char *path)
         }
     }
 
-    fclose(ff);
+    fclose(ff);*/
     fclose(f);
     return 0;
 }

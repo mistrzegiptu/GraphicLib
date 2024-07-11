@@ -4,6 +4,7 @@
 #include "bmp_lib.h"
 #include "graphic_filters.h"
 #include "GraphicLib.h"
+#include <time.h>
 
 int main(void)
 {
@@ -42,11 +43,15 @@ int main(void)
 
     //printf("\n%d %d", width, height);
     //gl_free_display(display, width, height);
+    clock_t sw;
     bmp_file image = {0};
     //bmp_init(&image, width, height, 24);
     //image.rasterData = display;
     bmp_read_file(&image, "testBmp/marbles.bmp");
+    sw = clock();
     gl_print_ascii(image.rasterData, image.width, image.height);
+    sw = clock()-sw;
+    printf("%f\n", (((double)sw)/CLOCKS_PER_SEC));
     //sepia(image.rasterData, image.height, image.width);
     //contrast_change(image.rasterData, image.height, image.width, 2.5);
     //sobel_operator(image.rasterData, image.height, image.width);
