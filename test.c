@@ -43,7 +43,7 @@ int main(void)
 
     //printf("\n%d %d", width, height);
     //gl_free_display(display, width, height);
-    clock_t sw;
+    /*clock_t sw;
     bmp_file image = {0};
     //bmp_init(&image, width, height, 24);
     //image.rasterData = display;
@@ -58,6 +58,14 @@ int main(void)
     //real_mono(image.rasterData, image.height, image.width);
     //brightness_change(image.rasterData, image.height, image.width, 60);
     bmp_save_file(&image, "res.bmp");
-    bmp_free(&image);
+    bmp_free(&image);*/
+    bmp_file *bmp = malloc(sizeof(bmp_file));
+    BITMAPINFOHEADER bmph = {0};
+    OS2BMPFILEHEADER osbm = {0};
+    bmp_header head = {0};
+    head.os2bmpfileheader = osbm;
+    bmp->header = head;
+    printf("%d ", sizeof(bmp->header));
+    free(bmp);
     return 0;
 }

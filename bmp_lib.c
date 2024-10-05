@@ -7,14 +7,7 @@ void bmp_init(bmp_file *img, int width, int height, unsigned short bitCount)
 {
     img->reserved = 0;
     img->dataOffset = 0;
-    img->headerSize = 40;
-    img->width = width;
-    img->height = height;
-    img->planes = 1;
-    img->bitCount = bitCount;
-    img->compression = NO_COMPRESSION;
-    img->imageSize = 0;
-    img->colorsImportant = 0;
+    img->fileSize = 0;
 
     bmp_alloc(img);
 }
@@ -25,55 +18,37 @@ int bmp_read_file(bmp_file *img, char *path)
 
     if(f == NULL)
     {
-        printf("Error opening file, incorrect path... \n");
-        return -1;
+        bmp_debug_log("Error opening file, incorrect path... \n");
+        return BMP_FILE_ERROR;
     }
-    unsigned char header[18]; //18 bytes since I'm reading InfoHeader size at once
-    if(fread(header, sizeof(unsigned char), 18, f) != 18)
+    if(bmp_check_header(f) != BMP_SUCCESS)
     {
-        printf("Error reading ..\n");
-        return -1;
+        bmp_debug_log("Wrong header type");
+        return BMP_HEADER_ERROR;
     }
-    if(header[0] != 0x42 || header[1] != 0x4d)
+    unsigned char header[14];
+    if(fread(header, sizeof(unsigned char), 14, f) != 14)
     {
-        printf("Wrong file type...\n");
-        return -1;
+        bmp_debug_log("Error reading ..\n");
+        return BMP_FILE_ERROR;
     }
 
     img->fileSize = header[2] | header[3] << 8 | header[4] << 16 | header[5] << 24;
     img->dataOffset = header[10] | header[11] << 8 | header[12] << 16 | header[13] << 24;
-    img->headerSize = header[14] | header[15] << 8 | header[16] << 16 | header[17] << 24;
+    img->header_version = (bmp_version)bmp_get_header_size(f);
 
-    if(img->headerSize != 40) //Currently reading only 40bytes InfoHeader
+    if(img->header_version != BMPHEADER_40) //TODO: other headers
     {
         printf("Header size %d \n", img->headerSize);
-        printf("Wrong BMP header type...\n");
-        return -1;
+        bmp_debug_log("Wrong BMP header type...\n");
+        return BMP_HEADER_ERROR;
     }
 
-    unsigned char infoHeader[36];
-    if(fread(infoHeader, sizeof(unsigned char), 36, f) != 36)
-    {
-        printf("Error reading InfoHeader...\n");
-        return -1;
-    }
+    int width = bmp_get_width(img);
+    int height = bmp_get_height(img);
+    bmp_compression compression = bmp_get_compression(img);
 
-    for(int i = 0; i < 4; i++)
-    {
-        img->width |= infoHeader[i] << 8*i;
-        img->height |= infoHeader[4+i] << 8*i;
-        img->compression |= infoHeader[12+i] << 8*i;
-        img->imageSize |= infoHeader[16+i] << 8*i;
-        img->xPixelPerM |= infoHeader[20+i] << 8*i;
-        img->yPixelsPerM |= infoHeader[24+i] << 8*i;
-        img->colorUsed |= infoHeader[28+i] << 8*i;
-        img->colorsImportant |= infoHeader[32+i] << 8*i;
-    }
-    img->planes = infoHeader[8] | infoHeader[9] << 8;
-    img->bitCount = infoHeader[10] | infoHeader[11] << 8;
-    bmp_print(img);
     if(img->rasterData == NULL) {
-        printf("allocating for reading\n");
         bmp_alloc(img);
     }
 
@@ -122,34 +97,133 @@ int bmp_read_file(bmp_file *img, char *path)
             free(row);
         }
     }
-    /*FILE *ff;
-    ff = fopen("outputBmp.ppm", "wb");
-    printf("DUPA\n");
-    if(ff==NULL)
-    {
-        printf("File error\n");
-        return -1;
-    }
-    printf("Writing to file\n");
-    fprintf(ff, "P3\n%d %d\n255\n", img->width, img->height);
-
-    for(int i = 0; i < img->height; i++)
-    {
-        for(int j = 0; j < img->width; j++)
-        {
-            if(img->rasterData == NULL)
-                return -1;
-            color_value color = img->rasterData[i][j];
-            unsigned char R = (color>>8*2)&0xFF;
-            unsigned char G = (color>>8*1)&0xFF;
-            unsigned char B = (color>>8*0)&0xFF;
-            fprintf(ff, "%d %d %d\n", R, G, B);
-        }
-    }
-
-    fclose(ff);*/
     fclose(f);
     return 0;
+}
+int bmp_check_header(FILE *file)
+{
+    unsigned char header[2] = {0};
+
+    if(fread(header, sizeof(unsigned char), 2, file) != 2)
+    {
+        bmp_debug_log("Error reading ..\n");
+        return BMP_FILE_ERROR;
+    }
+    if((header[0] << 8 | header[1]) != BMP_MAGIC_NUM)
+        return BMP_HEADER_ERROR;
+
+    fseek(f, 0, SEEK_SET);
+
+    return BMP_SUCCESS;
+}
+int bmp_get_header_size(FILE *f)
+{
+    unsigned char headerSize[4];
+    int result = 0;
+
+    if(fread(header, sizeof(unsigned char), 2, file) != 2)
+    {
+        bmp_debug_log("Error reading ..\n");
+        return BMP_FILE_ERROR;
+    }
+
+    for(int i = 0; i < 4; i++)
+        result |= headerSize[i] << 8 * (3 - i);
+
+    fseek(f, 14, SEEK_SET);
+    return result;
+}
+int bmp_read_header(bmp_file *img, FILE *file)
+{
+    if(img == NULL)
+    {
+        bmp_debug_log("Img is null");
+        return BMP_FILE_ERROR;
+    }
+
+    switch(img->headerSize)
+    {
+        case OS2_16:
+        {
+            OS2BMPFILEHEADER header = {0};
+
+            if(fread(&header, sizeof(OS2BMPFILEHEADER), 1, file) != 1)
+            {
+                bmp_debug_log("Error reading header");
+                return BMP_FILE_ERROR;
+            }
+
+            img->header_version = OS2_16;
+            img->header.os2bmpfileheader = header;
+            break;
+        }
+        case BMPHEADER_40:
+        {
+            BITMAPINFOHEADER header = {0};
+
+            if(fread(&header, sizeof(BMPHEADER_40), 1, file) != 1)
+            {
+                bmp_debug_log("Error reading header");
+                return BMP_FILE_ERROR;
+            }
+
+            img->header_version = BMPHEADER_40;
+            img->header.bitmapinfoheader = header;
+            break;
+        }
+        default:
+        {
+            bmp_debug_log("Unknown header");
+            return BMP_HEADER_ERROR;
+        }
+    }
+    return BMP_SUCCESS;
+}
+int bmp_get_width(bmp_file *img)
+{
+    switch(img->headerSize) {
+        case OS2_16: {
+            return img->header.os2bmpfileheader.Width;
+        }
+        case BMPHEADER_40:
+        {
+            return img->header.bitmapinfoheader.biWidth;
+        }
+        default:
+            return -1;
+    }
+}
+int bmp_get_height(bmp_file *img)
+{
+    switch(img->headerSize)
+    {
+        case OS2_16:
+        {
+            return img->header.os2bmpfileheader.Height;
+        }
+        case BMPHEADER_40:
+        {
+            return img->header.bitmapinfoheader.biHeight;
+        }
+        default:
+            return -1;
+    }
+}
+bmp_compression bmp_get_compression(bmp_file *img)
+{
+    switch(img->headerSize)
+    {
+        case OS2_16:
+        {
+            return img->header.os2bmpfileheader.BitsPerPixel;
+        }
+        case BMPHEADER_40:
+        {
+            return img->header.bitmapinfoheader.biHeight;
+        }
+        default:
+            return -1;
+    }
 }
 int bmp_save_file(bmp_file *img, char *path)
 {
@@ -158,8 +232,8 @@ int bmp_save_file(bmp_file *img, char *path)
 
     if(f == NULL)
     {
-        printf("Error opening file, incorrect path... \n");
-        return -1;
+        bmp_debug_log("Error opening file, incorrect path... \n");
+        return BMP_FILE_ERROR;
     }
 
     unsigned short magic_num = BMP_MAGIC_NUM;
@@ -184,7 +258,7 @@ int bmp_save_file(bmp_file *img, char *path)
     fwrite(&img->colorsImportant, sizeof(int), 1, f);
 
     if(img->rasterData == NULL)
-        return -1;
+        return BMP_FILE_ERROR;
 
     if(img->bitCount <= 8) {
         color_value *colorTable;
@@ -272,14 +346,28 @@ void bmp_print(bmp_file *img)
     printf("Colors important - %d\n", img->colorsImportant);
     printf("...............................................\n");
 }
-void bmp_alloc(bmp_file *image)
+bmp_error bmp_alloc(bmp_file *image)
 {
+    if(image == NULL)
+    {
+        bmp_debug_log("Bmp is null... \n");
+        return BMP_ALLOC_ERROR;
+    }
+
     image->rasterData = malloc(sizeof(color_value *) * image->height);
+
+    if(image->rasterData == NULL)
+    {
+        bmp_debug_log("Error allocating memory... \n");
+        return BMP_ALLOC_ERROR;
+    }
 
     for(int i = 0; i < image->height; i++)
     {
         image->rasterData[i] = malloc(sizeof(color_value) * image->width);
     }
+
+    return BMP_SUCCESS;
 }
 void bmp_free(bmp_file *img)
 {
@@ -291,6 +379,12 @@ void bmp_free(bmp_file *img)
 
     free(img->rasterData);
     free(img);
+}
+void bmp_debug_log(char *errorMessage)
+{
+    #ifdef BMP_DEBUG
+        printf("%s", errorMessage);
+    #endif
 }
 unsigned int calc_file_size(bmp_file *img)
 {
